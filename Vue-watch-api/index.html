@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Home</title>
+</head>
+<body>
+  <div id="app">
+    <input type="text" v-model="username" placeholder="Escribe tu Username de GitHub">
+    <ol>
+      <li v-for="repo in repos">{{repo.name}}</li>
+    </ol>
+  </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+<script>
+  function  queryGithubAPI(username){
+    return fetch(`https://api.github.com/users/${username}/repos`)
+            .then(response => response.json());
+  }
+  // amenos que no este iniciado antes self puede acceder a cuelaquer valos de la ventana
+  function debounce(func, wait, inmediate){
+    // tiempo de ejecucion si devuelve llamada cancela
+    // la ejecucion se detiene
+    self.timeout = self.timeout || null;
+    return function(){
+      var context = this, args = arguments;
+      clearTimeout(self.timeout);
+      self.timeout = setTimeout(function(){
+        self.timeout = null;
+        if(!inmediate) func.apply(context, args);
+      }, wait);
+      if(inmediate && !self.timeout) func.apply(context,args);
+    };
+  }
+
+  new Vue({
+    el:"#app",
+    data:{
+      username:'',
+      repos:[]
+    },
+    watch:{
+      username:function(){
+        debounce(()=>{
+          queryGithubAPI(this.username).then(repos=> {
+            if(repos.length > 0 && repos[0].id)
+            {
+              this.repos = repos;
+            }
+          });
+        },500)();
+
+      }
+    }
+  });
+</script>
+</html>
